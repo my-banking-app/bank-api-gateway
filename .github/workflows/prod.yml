@@ -8,7 +8,7 @@ on:
 
 jobs:
   pipeline:
-    uses: my-banking-app/ci-templates/.github/workflows/node-ms-ci-cd.yml@v1.0.8
+    uses: my-banking-app/ci-templates/.github/workflows/node-ms-ci-cd.yml@v1.0.9
     with:
       service-name:        "API Gateway GraphQL"
       docker-image-name:   "api-gateway"
