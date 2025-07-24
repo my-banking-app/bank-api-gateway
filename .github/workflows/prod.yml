@@ -1,0 +1,33 @@
+name: CI/CD Pipeline – API Gateway
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pipeline:
+    uses: my-banking-app/ci-templates/.github/workflows/node-ms-ci-cd.yml@v1.1.1
+    with:
+      service-name:        "API Gateway GraphQL"
+      docker-image-name:   "api-gateway"
+      service-port:        "4000"
+      sonar-project-key:   "my-banking-app_bank-ms-api-gateway"
+      node-version:        "20"
+      install-command:     "pnpm install --frozen-lockfile"
+      test-command:        "pnpm test:cov"
+    secrets:
+      SONAR_TOKEN:        ${{ secrets.SONAR_TOKEN }}
+      DOCKER_USERNAME:    ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD:    ${{ secrets.DOCKER_PASSWORD }}
+      VPS_HOST:           ${{ secrets.VPS_HOST }}
+      VPS_USERNAME:       ${{ secrets.VPS_USERNAME }}
+      VPS_PRIVATE_KEY:    ${{ secrets.VPS_PRIVATE_KEY }}
+      API_KEY:            ${{ secrets.API_KEY }}
+      JWT_SECRET:         ${{ secrets.JWT_SECRET }}
+      ACCOUNTS_URL:       ${{ secrets.ACCOUNTS_URL }}
+      TRANSACTIONS_URL:   ${{ secrets.TRANSACTIONS_URL }}
+      PAYMENTS_URL:       ${{ secrets.PAYMENTS_URL }}
+      CARDS_URL:          ${{ secrets.CARDS_URL }}
+      AUTH_URL:           ${{ secrets.AUTH_URL }}
