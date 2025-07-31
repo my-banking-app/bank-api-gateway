@@ -1,0 +1,56 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type HealthStatus {
+  status: String!
+  timestamp: String!
+  uptime: Float!
+  version: String!
+  environment: String!
+  graphqlEndpoint: String!
+}
+
+type User {
+  id: String!
+  identificationType: String!
+  identificationNumber: String!
+  firstName: String
+  lastName: String
+  age: Float
+  cityOfResidence: String
+  nationality: String
+  phoneNumber: String
+  civilStatus: String
+  email: String
+  gender: String
+  isActive: Boolean
+  createdAt: String
+  updatedAt: String
+}
+
+type AuthResponse {
+  token: String!
+  refreshToken: String!
+  expiresIn: Float!
+  tokenType: String!
+  userId: String!
+  message: String!
+  user: User
+}
+
+type Query {
+  health: HealthStatus!
+  status: String!
+}
+
+type Mutation {
+  login(input: LoginInput!): AuthResponse!
+  refreshToken(refreshToken: String!): AuthResponse!
+}
+
+input LoginInput {
+  identificationType: String!
+  identificationNumber: String!
+  password: String!
+}
