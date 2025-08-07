@@ -62,7 +62,7 @@ export class ApiKeysService {
     const hashedKey = this.hashApiKey(apiKey);
     const apiKeyData = this.apiKeys.get(hashedKey);
 
-    if (!apiKeyData || !apiKeyData.isActive) {
+    if (!apiKeyData?.isActive) {
       return {
         valid: false,
       };
