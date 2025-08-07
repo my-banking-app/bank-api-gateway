@@ -1,9 +1,12 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
 import { AuthResponse } from './dto/auth-response.type';
+import { ApiKeyGuard } from '../api-keys/guards/api-key.guard';
 
 @Resolver()
+@UseGuards(ApiKeyGuard)
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 

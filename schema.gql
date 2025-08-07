@@ -11,6 +11,33 @@ type HealthStatus {
   graphqlEndpoint: String!
 }
 
+type ApiKeyResponse {
+  apiKey: String!
+  expiresAt: String!
+  expiresIn: Float!
+  message: String!
+}
+
+type ValidateApiKeyResponse {
+  valid: Boolean!
+  expiresAt: String
+  remainingTime: Float
+}
+
+type ApiKeyInfo {
+  id: String!
+  apiKey: String!
+  description: String
+  createdAt: String!
+  expiresAt: String!
+  isActive: Boolean!
+}
+
+type RevokeApiKeyResponse {
+  success: Boolean!
+  message: String!
+}
+
 type User {
   id: String!
   identificationType: String!
@@ -42,11 +69,21 @@ type AuthResponse {
 type Query {
   health: HealthStatus!
   status: String!
+  validateApiKey(apiKey: String!): ValidateApiKeyResponse!
+  listApiKeys: [ApiKeyInfo!]!
+  cleanupExpiredKeys: String!
 }
 
 type Mutation {
+  generateApiKey(input: GenerateApiKeyInput!): ApiKeyResponse!
+  revokeApiKey(apiKey: String!): RevokeApiKeyResponse!
   login(input: LoginInput!): AuthResponse!
   refreshToken(refreshToken: String!): AuthResponse!
+}
+
+input GenerateApiKeyInput {
+  duration: String!
+  description: String
 }
 
 input LoginInput {
