@@ -3,6 +3,7 @@ import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
 import { AuthResponse } from './dto/auth-response.type';
+import { ApiKeysService } from '../api-keys/api-keys.service';
 
 describe('AuthResolver', () => {
   let resolver: AuthResolver;
@@ -12,6 +13,14 @@ describe('AuthResolver', () => {
     refreshToken: jest.fn(),
   };
 
+  const mockApiKeysService = {
+    validateApiKey: jest.fn().mockReturnValue({
+      valid: true,
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      remainingTime: 3600,
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -19,6 +28,10 @@ describe('AuthResolver', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: ApiKeysService,
+          useValue: mockApiKeysService,
         },
       ],
     }).compile();

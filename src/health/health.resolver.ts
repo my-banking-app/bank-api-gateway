@@ -6,7 +6,6 @@ import { HealthStatus } from './dto/health-status.type';
 export class HealthResolver {
   constructor(private readonly healthService: HealthService) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   @Query(() => HealthStatus)
   health(): HealthStatus {
     return this.healthService.getHealthStatus();

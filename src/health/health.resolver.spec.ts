@@ -46,7 +46,7 @@ describe('HealthResolver', () => {
 
       mockHealthService.getHealthStatus.mockReturnValue(mockHealthStatus);
 
-      const result = resolver.health() as HealthStatus;
+      const result = resolver.health();
 
       expect(result).toEqual(mockHealthStatus);
       expect(mockHealthService.getHealthStatus).toHaveBeenCalledTimes(1);
