@@ -2,6 +2,7 @@ import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
+import { RegisterInput } from './dto/register.input';
 import { AuthResponse } from './dto/auth-response.type';
 import { ApiKeyGuard } from '../api-keys/guards/api-key.guard';
 
@@ -20,5 +21,10 @@ export class AuthResolver {
     @Args('refreshToken') refreshToken: string,
   ): Promise<AuthResponse> {
     return this.authService.refreshToken(refreshToken);
+  }
+
+  @Mutation(() => AuthResponse)
+  async register(@Args('input') input: RegisterInput): Promise<AuthResponse> {
+    return this.authService.register(input);
   }
 }

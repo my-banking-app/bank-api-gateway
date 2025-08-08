@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
+import { RegisterInput } from './dto/register.input';
 import { AuthResponse } from './dto/auth-response.type';
 import { ApiKeysService } from '../api-keys/api-keys.service';
 
@@ -11,6 +12,7 @@ describe('AuthResolver', () => {
   const mockAuthService = {
     login: jest.fn(),
     refreshToken: jest.fn(),
+    register: jest.fn(),
   };
 
   const mockApiKeysService = {
@@ -132,6 +134,83 @@ describe('AuthResolver', () => {
       expect(mockAuthService.refreshToken).toHaveBeenCalledWith(
         refreshTokenValue,
       );
+    });
+  });
+
+  describe('register', () => {
+    it('should call authService.register and return result', async () => {
+      const registerInput: RegisterInput = {
+        identificationType: 'CC',
+        identificationNumber: '12345678',
+        firstName: 'John',
+        lastName: 'Doe',
+        age: 25,
+        cityOfResidence: 'Bogotá',
+        nationality: 'Colombian',
+        phoneNumber: '+573001234567',
+        civilStatus: 'Single',
+        email: 'john@example.com',
+        password: 'password123',
+        gender: 'MALE',
+        dataProcessingAgreement: true,
+      };
+
+      const expectedResponse: AuthResponse = {
+        token: 'jwt-token',
+        refreshToken: 'refresh-token',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+        userId: 'user-123',
+        message: 'User registered successfully',
+        user: {
+          id: 'user-123',
+          identificationType: 'CC',
+          identificationNumber: '12345678',
+          firstName: 'John',
+          lastName: 'Doe',
+          age: 25,
+          cityOfResidence: 'Bogotá',
+          nationality: 'Colombian',
+          phoneNumber: '+573001234567',
+          civilStatus: 'Single',
+          email: 'john@example.com',
+          gender: 'MALE',
+        },
+      };
+
+      mockAuthService.register.mockResolvedValue(expectedResponse);
+
+      const result = await resolver.register(registerInput);
+
+      expect(result).toEqual(expectedResponse);
+      expect(mockAuthService.register).toHaveBeenCalledWith(registerInput);
+      expect(mockAuthService.register).toHaveBeenCalledTimes(1);
+    });
+
+    it('should propagate errors from authService.register', async () => {
+      const registerInput: RegisterInput = {
+        identificationType: 'CC',
+        identificationNumber: '12345678',
+        firstName: 'John',
+        lastName: 'Doe',
+        age: 25,
+        cityOfResidence: 'Bogotá',
+        nationality: 'Colombian',
+        phoneNumber: '+573001234567',
+        civilStatus: 'Single',
+        email: 'john@example.com',
+        password: 'password123',
+        gender: 'MALE',
+        dataProcessingAgreement: true,
+      };
+
+      const error = new Error('User already exists');
+      mockAuthService.register.mockRejectedValue(error);
+
+      await expect(resolver.register(registerInput)).rejects.toThrow(
+        'User already exists',
+      );
+      expect(mockAuthService.register).toHaveBeenCalledWith(registerInput);
     });
   });
 });

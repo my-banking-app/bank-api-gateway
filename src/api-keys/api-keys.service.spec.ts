@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { ApiKeysService } from './api-keys.service';
 import { GenerateApiKeyInput } from './dto/generate-api-key.input';
-import { ApiKeyResponse, ValidateApiKeyResponse } from './dto/api-key-response.type';
+import {
+  ApiKeyResponse,
+  ValidateApiKeyResponse,
+} from './dto/api-key-response.type';
 
 describe('ApiKeysService', () => {
   let service: ApiKeysService;
@@ -118,7 +121,9 @@ describe('ApiKeysService', () => {
       };
 
       // Act & Assert
-      expect(() => service.generateApiKey(input)).toThrow('Duración no válida: invalid');
+      expect(() => service.generateApiKey(input)).toThrow(
+        'Duración no válida: invalid',
+      );
     });
 
     it('should use default prefix when config is not set', () => {
@@ -169,7 +174,9 @@ describe('ApiKeysService', () => {
       const generated = service.generateApiKey(input);
 
       // Act
-      const result: ValidateApiKeyResponse = service.validateApiKey(generated.apiKey);
+      const result: ValidateApiKeyResponse = service.validateApiKey(
+        generated.apiKey,
+      );
 
       // Assert
       expect(result.valid).toBe(true);
@@ -201,7 +208,9 @@ describe('ApiKeysService', () => {
       jest.setSystemTime(new Date('2024-01-01T02:00:00.000Z'));
 
       // Act
-      const result: ValidateApiKeyResponse = service.validateApiKey(generated.apiKey);
+      const result: ValidateApiKeyResponse = service.validateApiKey(
+        generated.apiKey,
+      );
 
       // Assert
       expect(result.valid).toBe(false);
@@ -220,7 +229,9 @@ describe('ApiKeysService', () => {
       jest.setSystemTime(new Date('2024-01-01T00:30:00.000Z'));
 
       // Act
-      const result: ValidateApiKeyResponse = service.validateApiKey(generated.apiKey);
+      const result: ValidateApiKeyResponse = service.validateApiKey(
+        generated.apiKey,
+      );
 
       // Assert
       expect(result.valid).toBe(true);
@@ -231,7 +242,7 @@ describe('ApiKeysService', () => {
       // Arrange
       const input1: GenerateApiKeyInput = { duration: '1h' };
       const input2: GenerateApiKeyInput = { duration: '24h' };
-      
+
       const generated1 = service.generateApiKey(input1);
       const generated2 = service.generateApiKey(input2);
 
