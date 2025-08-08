@@ -48,7 +48,9 @@ describe('ApiKeyGuard', () => {
     apiKeysService = module.get<ApiKeysService>(ApiKeysService);
 
     // Mock GqlExecutionContext.create
-    jest.spyOn(GqlExecutionContext, 'create').mockReturnValue(mockGqlExecutionContext as any);
+    jest
+      .spyOn(GqlExecutionContext, 'create')
+      .mockReturnValue(mockGqlExecutionContext as any);
   });
 
   afterEach(() => {
@@ -96,7 +98,9 @@ describe('ApiKeyGuard', () => {
 
       // Act & Assert
       expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-        new UnauthorizedException('API Key requerida. Incluye x-api-key en los headers.'),
+        new UnauthorizedException(
+          'API Key requerida. Incluye x-api-key en los headers.',
+        ),
       );
       expect(apiKeysService.validateApiKey).not.toHaveBeenCalled();
     });
@@ -107,7 +111,9 @@ describe('ApiKeyGuard', () => {
 
       // Act & Assert
       expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-        new UnauthorizedException('API Key requerida. Incluye x-api-key en los headers.'),
+        new UnauthorizedException(
+          'API Key requerida. Incluye x-api-key en los headers.',
+        ),
       );
       expect(apiKeysService.validateApiKey).not.toHaveBeenCalled();
     });
@@ -125,7 +131,9 @@ describe('ApiKeyGuard', () => {
 
       // Act & Assert
       expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-        new UnauthorizedException('API Key inválida o expirada. Genera una nueva API key.'),
+        new UnauthorizedException(
+          'API Key inválida o expirada. Genera una nueva API key.',
+        ),
       );
       expect(apiKeysService.validateApiKey).toHaveBeenCalledWith(invalidApiKey);
     });
@@ -143,7 +151,9 @@ describe('ApiKeyGuard', () => {
 
       // Act & Assert
       expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-        new UnauthorizedException('API Key inválida o expirada. Genera una nueva API key.'),
+        new UnauthorizedException(
+          'API Key inválida o expirada. Genera una nueva API key.',
+        ),
       );
       expect(apiKeysService.validateApiKey).toHaveBeenCalledWith(expiredApiKey);
     });
@@ -188,7 +198,9 @@ describe('ApiKeyGuard', () => {
       guard.canActivate(mockExecutionContext);
 
       // Assert
-      expect(GqlExecutionContext.create).toHaveBeenCalledWith(mockExecutionContext);
+      expect(GqlExecutionContext.create).toHaveBeenCalledWith(
+        mockExecutionContext,
+      );
       expect(mockGqlExecutionContext.getContext).toHaveBeenCalled();
     });
 
@@ -206,7 +218,9 @@ describe('ApiKeyGuard', () => {
       // Act & Assert
       // This should fail because we're looking for 'x-api-key' specifically
       expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-        new UnauthorizedException('API Key requerida. Incluye x-api-key en los headers.'),
+        new UnauthorizedException(
+          'API Key requerida. Incluye x-api-key en los headers.',
+        ),
       );
     });
   });

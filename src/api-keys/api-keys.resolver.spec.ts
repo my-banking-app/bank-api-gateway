@@ -88,7 +88,7 @@ describe('ApiKeysResolver', () => {
     it('should handle different duration values', () => {
       // Arrange
       const durations = ['1h', '24h', '7d', '30d'];
-      
+
       durations.forEach((duration, index) => {
         const input: GenerateApiKeyInput = {
           duration,

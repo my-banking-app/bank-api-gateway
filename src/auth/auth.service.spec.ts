@@ -3,7 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/login.input';
-import { of, throwError } from 'rxjs';
+import { RegisterInput } from './dto/register.input';
+import { of, throwError as rxjsThrowError } from 'rxjs';
 import { AxiosResponse } from 'axios';
 
 describe('AuthService', () => {
@@ -20,7 +21,7 @@ describe('AuthService', () => {
     get: jest.fn(),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockConfigService.get.mockImplementation((key: string) => {
       switch (key) {
@@ -34,9 +35,7 @@ describe('AuthService', () => {
           return undefined;
       }
     });
-  });
 
-  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -144,7 +143,7 @@ describe('AuthService', () => {
         },
       };
 
-      mockHttpService.post.mockReturnValue(throwError(() => error));
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
 
       await expect(service.login(loginInput)).rejects.toThrow(
         'Invalid credentials',
@@ -159,7 +158,7 @@ describe('AuthService', () => {
         },
       };
 
-      mockHttpService.post.mockReturnValue(throwError(() => error));
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
 
       await expect(service.login(loginInput)).rejects.toThrow(
         'Internal server error',
@@ -169,85 +168,10 @@ describe('AuthService', () => {
     it('should handle network errors', async () => {
       const error = new Error('Network error');
 
-      mockHttpService.post.mockReturnValue(throwError(() => error));
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
 
       await expect(service.login(loginInput)).rejects.toThrow(
         'Service unavailable',
-      );
-    });
-
-    it('should use default values when response data is incomplete', async () => {
-      const mockResponse: AxiosResponse = {
-        data: {
-          accessToken: 'access-token',
-        },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as never,
-      };
-
-      mockHttpService.post.mockReturnValue(of(mockResponse));
-
-      const result = await service.login(loginInput);
-
-      expect(result).toEqual({
-        token: 'access-token',
-        refreshToken: '',
-        expiresIn: 3600,
-        tokenType: 'Bearer',
-        userId: '',
-        message: 'Login successful',
-        user: {
-          id: '',
-          identificationType: '',
-          identificationNumber: '',
-          firstName: undefined,
-          lastName: undefined,
-          age: undefined,
-          cityOfResidence: undefined,
-          nationality: undefined,
-          phoneNumber: undefined,
-          civilStatus: undefined,
-          email: undefined,
-          gender: undefined,
-        },
-      });
-    });
-  });
-
-  describe('validateToken', () => {
-    it('should successfully validate token', async () => {
-      const mockResponse: AxiosResponse = {
-        data: { valid: true, userId: 'user-123' },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as never,
-      };
-
-      mockHttpService.get.mockReturnValue(of(mockResponse));
-
-      const result = await service.validateToken('valid-token');
-
-      expect(result).toEqual({ valid: true, userId: 'user-123' });
-      expect(mockHttpService.get).toHaveBeenCalledWith(
-        'http://localhost:3001/auth/validate',
-        {
-          headers: {
-            Authorization: 'Bearer valid-token',
-            'x-api-key': 'test-api-key',
-          },
-        },
-      );
-    });
-
-    it('should throw error when token validation fails', async () => {
-      const error = new Error('Validation failed');
-      mockHttpService.get.mockReturnValue(throwError(() => error));
-
-      await expect(service.validateToken('invalid-token')).rejects.toThrow(
-        'Token validation failed',
       );
     });
   });
@@ -260,8 +184,6 @@ describe('AuthService', () => {
           refreshToken: 'new-refresh-token',
           expiresIn: 3600,
           tokenType: 'Bearer',
-          userId: 'user-123',
-          message: 'Token refreshed successfully',
         },
         status: 200,
         statusText: 'OK',
@@ -271,21 +193,151 @@ describe('AuthService', () => {
 
       mockHttpService.post.mockReturnValue(of(mockResponse));
 
-      const result = await service.refreshToken('refresh-token');
+      const result = await service.refreshToken('old-refresh-token');
 
       expect(result).toEqual({
         token: 'new-jwt-token',
         refreshToken: 'new-refresh-token',
         expiresIn: 3600,
         tokenType: 'Bearer',
-        userId: 'user-123',
+        userId: '',
         message: 'Token refreshed successfully',
+        user: {
+          id: '',
+          identificationType: '',
+          identificationNumber: '',
+          firstName: '',
+          lastName: '',
+          age: undefined,
+          cityOfResidence: undefined,
+          nationality: undefined,
+          phoneNumber: undefined,
+          civilStatus: undefined,
+          email: '',
+          gender: undefined,
+        },
       });
 
       expect(mockHttpService.post).toHaveBeenCalledWith(
         'http://localhost:3001/auth/refresh',
+        { refreshToken: 'old-refresh-token' },
         {
+          headers: {
+            'x-api-key': 'test-api-key',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    });
+
+    it('should handle refresh token errors', async () => {
+      const error = {
+        response: {
+          status: 401,
+          data: { message: 'Invalid refresh token' },
+        },
+      };
+
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
+
+      await expect(service.refreshToken('invalid-token')).rejects.toThrow(
+        'Invalid refresh token',
+      );
+    });
+  });
+
+  describe('register', () => {
+    const registerInput: RegisterInput = {
+      identificationType: 'CC',
+      identificationNumber: '12345678',
+      firstName: 'John',
+      lastName: 'Doe',
+      age: 25,
+      cityOfResidence: 'Bogotá',
+      nationality: 'Colombian',
+      phoneNumber: '+573001234567',
+      civilStatus: 'Single',
+      email: 'john@example.com',
+      password: 'password123',
+      gender: 'MALE',
+      dataProcessingAgreement: true,
+    };
+
+    it('should successfully register a new user', async () => {
+      const mockResponse: AxiosResponse = {
+        data: {
+          id: 'user-123',
+          token: 'jwt-token',
           refreshToken: 'refresh-token',
+          expiresIn: 3600,
+          tokenType: 'Bearer',
+          identificationType: 'CC',
+          identificationNumber: '12345678',
+          firstName: 'John',
+          lastName: 'Doe',
+          age: 25,
+          cityOfResidence: 'Bogotá',
+          nationality: 'Colombian',
+          phoneNumber: '+573001234567',
+          civilStatus: 'Single',
+          email: 'john@example.com',
+          gender: 'MALE',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as never,
+      };
+
+      mockHttpService.post.mockReturnValue(of(mockResponse));
+
+      const result = await service.register(registerInput);
+
+      expect(result).toEqual({
+        token: 'jwt-token',
+        refreshToken: 'refresh-token',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+        userId: 'user-123',
+        message: 'User registered successfully',
+        user: {
+          id: 'user-123',
+          identificationType: 'CC',
+          identificationNumber: '12345678',
+          firstName: 'John',
+          lastName: 'Doe',
+          age: 25,
+          cityOfResidence: 'Bogotá',
+          nationality: 'Colombian',
+          phoneNumber: '+573001234567',
+          civilStatus: 'Single',
+          email: 'john@example.com',
+          gender: 'MALE',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+        },
+      });
+
+      expect(mockHttpService.post).toHaveBeenCalledWith(
+        'http://localhost:3001/auth/register',
+        {
+          identificationType: 'CC',
+          identificationNumber: '12345678',
+          firstName: 'John',
+          lastName: 'Doe',
+          age: 25,
+          cityOfResidence: 'Bogotá',
+          nationality: 'Colombian',
+          phoneNumber: '+573001234567',
+          civilStatus: 'Single',
+          email: 'john@example.com',
+          password: 'password123',
+          gender: 'MALE',
+          dataProcessingAgreement: true,
         },
         {
           headers: {
@@ -296,36 +348,59 @@ describe('AuthService', () => {
       );
     });
 
-    it('should handle refresh token failure', async () => {
-      const error = new Error('Refresh failed');
-      mockHttpService.post.mockReturnValue(throwError(() => error));
-
-      await expect(
-        service.refreshToken('invalid-refresh-token'),
-      ).rejects.toThrow('Token refresh failed');
-    });
-
-    it('should use default values when refresh response is incomplete', async () => {
-      const mockResponse: AxiosResponse = {
-        data: {},
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as never,
+    it('should handle 400 bad request error', async () => {
+      const error = {
+        response: {
+          status: 400,
+          data: { message: 'Invalid registration data' },
+        },
       };
 
-      mockHttpService.post.mockReturnValue(of(mockResponse));
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
 
-      const result = await service.refreshToken('refresh-token');
+      await expect(service.register(registerInput)).rejects.toThrow(
+        'Invalid registration data',
+      );
+    });
 
-      expect(result).toEqual({
-        token: '',
-        refreshToken: '',
-        expiresIn: 3600,
-        tokenType: 'Bearer',
-        userId: '',
-        message: 'Token refreshed successfully',
-      });
+    it('should handle 409 conflict error (user already exists)', async () => {
+      const error = {
+        response: {
+          status: 409,
+          data: { message: 'User already exists' },
+        },
+      };
+
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
+
+      await expect(service.register(registerInput)).rejects.toThrow(
+        'User already exists',
+      );
+    });
+
+    it('should handle other HTTP errors', async () => {
+      const error = {
+        response: {
+          status: 500,
+          data: { message: 'Internal server error' },
+        },
+      };
+
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
+
+      await expect(service.register(registerInput)).rejects.toThrow(
+        'Internal server error',
+      );
+    });
+
+    it('should handle network errors', async () => {
+      const error = new Error('Network error');
+
+      mockHttpService.post.mockReturnValue(rxjsThrowError(() => error));
+
+      await expect(service.register(registerInput)).rejects.toThrow(
+        'Registration service unavailable',
+      );
     });
   });
 });

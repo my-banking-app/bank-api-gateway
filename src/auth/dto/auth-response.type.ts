@@ -53,8 +53,8 @@ export class AuthResponse {
   @Field()
   token: string;
 
-  @Field()
-  refreshToken?: string;
+  @Field(() => String, { nullable: true })
+  refreshToken?: string | null;
 
   @Field()
   expiresIn: number;
